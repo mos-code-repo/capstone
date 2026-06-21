@@ -2,7 +2,7 @@
 
 ## Motivation
 
-This dataset was created to support a black-box optimisation (BBO) challenge as part of the Imperial College London AI/ML postgraduate programme. The task is to maximise the output of eight unknown functions by submitting one query vector per function per round, with no access to gradients or function definitions. The dataset records the full history of query inputs and corresponding function outputs accumulated across ten rounds of iterative search. It supports the development, evaluation, and retrospective analysis of sequential optimisation strategies under extreme data scarcity.
+This dataset was created to support a black-box optimisation (BBO) challenge as part of the Imperial College London AI/ML postgraduate programme. The task is to maximise the output of eight unknown functions by submitting one query vector per function per round, with no access to gradients or function definitions. The dataset records the full history of query inputs and corresponding function outputs accumulated across twelve rounds of iterative search. It supports the development, evaluation, and retrospective analysis of sequential optimisation strategies under extreme data scarcity.
 
 ---
 
@@ -13,19 +13,19 @@ The dataset contains input-output pairs for eight functions, each with a differe
 | Function | Input dimension | All-time best output | Round achieved |
 |----------|----------------|---------------------|----------------|
 | F1 | 2 | ~0 (confirmed zero) | Retired R7 |
-| F2 | 2 | 0.6686 | R7 |
-| F3 | 3 | -0.0129 | R8 |
+| F2 | 2 | 0.6947 | R11 |
+| F3 | 3 | -0.0108 | R11 |
 | F4 | 4 | 0.4394 | R10 |
 | F5 | 4 | 8662.48 | R9 |
-| F6 | 5 | -0.1778 | R6 |
-| F7 | 6 | 2.2164 | R10 |
-| F8 | 8 | 9.9663 | R10 |
+| F6 | 5 | -0.1778 | R5 |
+| F7 | 6 | 2.2957 | R11 |
+| F8 | 8 | 9.9671 | R11 |
 
-Each function has 11 rows of data: one initial evaluation (provided by the course portal) plus one submitted query per round across ten rounds. Total dataset size: 88 input-output pairs (8 functions × 11 evaluations).
+Each function has up to 13 rows of data: one initial evaluation (provided by the course portal) plus one submitted query per round across twelve rounds. Total dataset size: 104 input-output pairs (8 functions x 13 evaluations).
 
-**Format:** NumPy arrays (.npy) for initial data; rounds 1–10 embedded inline in the capstone notebook. All inputs are normalised to [0, 1]^d. Outputs are raw scalar values from the oracle.
+**Format:** NumPy arrays (.npy) for initial data; rounds 1--12 embedded inline in the capstone notebook. All inputs are normalised to [0, 1]^d. Outputs are raw scalar values from the oracle.
 
-**Gaps:** F1 output is effectively zero for all inputs evaluated — no signal to exploit. F6 achieved its best result in R6 and has not recovered that value in subsequent rounds despite targeted search, suggesting a sharp narrow peak that random sampling cannot reliably reproduce. The search space for high-dimensional functions (F7: 6D, F8: 8D) is heavily undersampled — 10 points in an 8-dimensional unit hypercube provides negligible global coverage.
+**Gaps:** F1 output is effectively zero for all inputs evaluated -- no signal to exploit. F6 achieved its best result in R5 (-0.178) and has not recovered that value in six subsequent rounds despite targeted search; hierarchical clustering (Ward linkage, k=3) applied in R12 confirmed that all post-R5 queries cluster within 0.000099 of the R5 best in input space, with the output collapsing from -0.178 to -0.337 at that distance -- confirming a sub-0.0001 spike in 5D. R12 probes a completely unexplored region. The search space for high-dimensional functions (F7: 6D, F8: 8D) is heavily undersampled -- 12 points in an 8-dimensional unit hypercube provides negligible global coverage.
 
 ---
 
@@ -37,11 +37,12 @@ The strategy evolved across rounds:
 - **R1:** Simple nudge — small perturbation of the initial best input
 - **R2–R3:** Gaussian Process with UCB acquisition, ensemble GP with Latin Hypercube candidates
 - **R4–R8:** Hybrid strategy combining GP-UCB and TensorFlow neural network gradient ascent, with function-specific radius and method selection based on accumulated round history
-- **R9–R10:** Pure scikit-learn GP-UCB (TensorFlow dropped due to runtime instability); tight local exploitation anchored on confirmed all-time best inputs
+- **R9--R11:** Pure scikit-learn GP-UCB (TensorFlow dropped due to runtime instability); tight local exploitation anchored on confirmed all-time best inputs per function
+- **R11 F6:** GP-UCB abandoned in favour of a dense random probe within +/-0.0001 of the R5 best, after observing that the Matern kernel (length scale 0.05) cannot represent a landscape that drops 0.12 over a distance of 0.003
+- **R12 F6:** Hierarchical clustering (Ward linkage) applied to all 11 F6 input points to identify the most unexplored region of the 5D input space; probe submitted at [0.8538, 0.119, 0.035, 0.0172, 0.9531] -- 1.31 Euclidean units from all known F6 queries
+- **R12 F2/F3/F4/F7/F8:** GP-UCB continued with tight radii anchored on R11 all-time bests
 
-Special case — **F6, R11:** GP-UCB abandoned in favour of a dense random probe within ±0.0001 of the R6 best, after observing that the GP's Matern kernel (length scale 0.05) cannot represent a landscape that drops 0.12 in output over a distance of 0.003.
-
-**Time frame:** Approximately ten weeks, one round per week, following the Imperial College module schedule.
+**Time frame:** Approximately twelve weeks, one round per week, following the Imperial College module schedule.
 
 ---
 

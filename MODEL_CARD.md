@@ -5,7 +5,7 @@
 **Name:** GP-UCB Local Exploitation with Adaptive Radius  
 **Type:** Sequential model-based optimisation (SMBO) using Gaussian Process surrogate with Upper Confidence Bound acquisition  
 **Implementation:** scikit-learn `GaussianProcessRegressor` with Matern kernel ensemble  
-**Version:** v3 (rounds 9–10; see Details for full evolution)
+**Version:** v4 (rounds 9--12; see Details for full evolution)
 
 ---
 
@@ -25,7 +25,7 @@
 
 ---
 
-## Details: Strategy Evolution Across Ten Rounds
+## Details: Strategy Evolution Across Twelve Rounds
 
 ### Phase 1 — Exploration (R1–R3)
 Initial queries used simple perturbation of the provided best input (R1), followed by a single GP with UCB acquisition over random candidates drawn via Latin Hypercube Sampling across the full input domain (R2–R3). Results were mixed: F5 showed strong response to boundary-seeking; most other functions showed high variance.
@@ -35,17 +35,20 @@ A function-specific strategy was adopted: GP-UCB for functions showing smooth la
 
 TensorFlow was removed in R9 after runtime instability — sequential `model.fit` calls across 6 functions caused 5+ minute hangs per execution. All functions reverted to sklearn GP-UCB.
 
-### Phase 3 — Tight Local Exploitation (R9–R10)
+### Phase 3 -- Tight Local Exploitation (R9--R11)
 All active functions (excluding F1 and F5) used GP-UCB with tight radii anchored on their confirmed all-time best inputs:
 
 | Function | Radius | Rationale |
 |----------|--------|-----------|
-| F2 | ±0.005 | Sharp peak — R7 best not recovered; tight search around [0.715, 0.911] |
-| F3 | ±0.005 | Slow improving landscape |
-| F4 | ±0.005 | Active seam — R10 produced new best (+0.110 jump) |
-| F6 | ±0.003 → ±0.0001 | Extremely sharp peak; R10 within 0.003 of R6 best but -0.302 vs -0.178; GP abandoned for R11 |
-| F7 | ±0.010 | Broader active seam; consistent upward trend R6–R10 |
-| F8 | ±0.005 | Near ceiling; marginal gains per round |
+| F2 | +/-0.005 | Recovered and surpassed R7 best (0.6686) in R11 (0.6947) |
+| F3 | +/-0.005 | Best round ever in R11 (-0.0108); active improvement seam |
+| F4 | +/-0.005 | R10 new best (+0.110 jump); R11 regressed; re-anchored R10 best for R12 |
+| F6 | +/-0.003 to +/-0.0001 | Pathological spike; even 0.000099 from R5 best collapses output -0.178 to -0.337 |
+| F7 | +/-0.010 | Consistent upward trend R6--R11; new best each round |
+| F8 | +/-0.005 | Near ceiling (~10.0); marginal but consistent gains |
+
+### Phase 4 -- Clustering-Guided Exploration (R12)
+F6 local search definitively exhausted after confirming sub-0.0001 spike via +/-0.0001 random probe. Hierarchical clustering (Ward linkage, k=3) applied to all 11 F6 input-output pairs to identify unexplored regions. The three clusters revealed that all post-R5 queries (R6--R11) lie within 0.000099 of the R5 best -- confirming the strategy had been searching an infinitesimally small neighbourhood. The most unexplored point (max-min-distance from all known inputs) was identified at [0.8538, 0.119, 0.035, 0.0172, 0.9531], 1.31 Euclidean units from all known F6 queries. R12 submits this as a final basin exploration. All other functions continue GP-UCB exploitation anchored on R11 bests.
 
 **Kernel:** Matern ensemble — `C(1.0)*Matern(ls=0.05, ν=2.5) + C(1.0)*Matern(ls=0.10, ν=2.5)`  
 **Candidates:** 5000 per function per round  
@@ -56,18 +59,18 @@ All active functions (excluding F1 and F5) used GP-UCB with tight radii anchored
 
 ## Performance
 
-Results across all rounds (Init + R1–R10):
+Results across all rounds (Init + R1--R11):
 
 | Fn | Initial | Best achieved | Round | Trend |
 |----|---------|--------------|-------|-------|
-| F1 | ~0 | ~0 | All | Confirmed zero — retired |
-| F2 | 0.611 | **0.669** | R7 | Peaked R7, declining since |
-| F3 | -0.035 | **-0.013** | R8 | Slow improvement |
-| F4 | -4.026 | **0.439** | R10 | Breakthrough in final rounds |
-| F5 | 1089 | **8662** | R9 | Super-linear boundary scaling |
-| F6 | -0.714 | **-0.178** | R6 | Sharp peak — not recovered |
-| F7 | 1.365 | **2.216** | R10 | Consistent upward trend |
-| F8 | 9.598 | **9.966** | R10 | Near ceiling, marginal gains |
+| F1 | ~0 | ~0 | All | Confirmed zero -- retired R7 |
+| F2 | 0.611 | **0.695** | R11 | Surpassed R7 peak after 4 rounds of recovery |
+| F3 | -0.035 | **-0.011** | R11 | Best round ever in R11; active seam |
+| F4 | -4.026 | **0.439** | R10 | Breakthrough R10; R11 regressed |
+| F5 | 1089 | **8662** | R9 | Super-linear boundary scaling; ceiling R9--R11 |
+| F6 | -0.714 | **-0.178** | R5 | Sub-0.0001 spike; local search exhausted |
+| F7 | 1.365 | **2.296** | R11 | Consistent upward trend across 6 rounds |
+| F8 | 9.598 | **9.967** | R11 | Near ceiling; marginal but consistent gains |
 
 **Metric used:** Raw function output from the course oracle. No normalisation applied across functions — outputs are on incomparable scales (F5: ~8662 vs F3: ~-0.013).
 
@@ -82,7 +85,7 @@ Results across all rounds (Init + R1–R10):
 
 **Limitations:**
 - **Curse of dimensionality:** With 10 training points in 8 dimensions (F8), the GP is extrapolating for virtually the entire search space. Uncertainty estimates are unreliable beyond the immediate vicinity of known points.
-- **No global recovery:** The strategy does not include mechanisms for escaping local optima. F6's all-time best from R6 has not been recovered in 4 subsequent rounds, suggesting the strategy is trapped in a suboptimal basin.
+- **No global recovery:** The strategy does not include mechanisms for escaping local optima. F6's all-time best from R5 has not been recovered in 6 subsequent rounds. Hierarchical clustering applied in R12 identified that all post-R5 queries lie within 0.000099 of the R5 best -- the strategy was trapped in a sub-0.0001 neighbourhood for 6 rounds without realising it. R12 pivots to a completely unexplored basin as a last resort.
 - **Computational constraints:** 5000 candidates per function with GP fitting is the practical limit for single-session notebook execution. Larger candidate sets or multi-restart optimisation would be more thorough but slower.
 - **Single query per round:** One evaluation per function per round severely limits the rate of information gain, particularly in high dimensions.
 
