@@ -2,6 +2,10 @@
 
 ## Overview
 
+> **BBO is an informed lottery in a high-dimensional space. That is the honest description. The rest is implementation detail.**
+
+At its core, black-box optimisation submits coordinate vectors to an unknown function, observes what comes back, and uses those observations to decide where to look next. The surrogate model, acquisition function, and kernel choices described below are the specific tools used to make those decisions more efficient than random search -- but they do not change the fundamental nature of the task. With a finite query budget and no access to the function's definition or gradients, any reported optimum is the best value found among the points evaluated, not a proven global maximum.
+
 **Name:** GP-UCB Local Exploitation with Adaptive Radius  
 **Type:** Sequential model-based optimisation (SMBO) using Gaussian Process surrogate with Upper Confidence Bound acquisition  
 **Implementation:** scikit-learn `GaussianProcessRegressor` with Matern kernel ensemble  
