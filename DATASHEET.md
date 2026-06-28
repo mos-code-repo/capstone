@@ -64,6 +64,16 @@ The strategy evolved across rounds:
 
 ---
 
+## Ethical, Practical and General Considerations
+
+The black-box optimisation task simulates real-world scenarios — contamination detection, chemical yield maximisation, dose-finding — where each evaluation carries a genuine cost. The ethical implication is resource allocation: every query spent on a function with no recoverable signal (F1, F6 post-R5) is a query that could have been directed at a function with active improvement potential. Retiring F1 at R7 and closing the F6 investigation at R13 with clustering-based evidence rather than continued hope reflects this obligation to use a finite budget responsibly.
+
+The synthetic nature of the functions limits direct transfer. Real experimental optimisation involves noise, measurement error, and irreversible side effects that this dataset does not capture. A strategy that performs well here should be validated against noisy objectives and under budget constraints stricter than one query per week before being applied to consequential decisions.
+
+The tight-radius exploitation strategy would not scale safely to problems where the global optimum is distant from an early local best — clinical dose-finding being the clearest example, where anchoring on an early promising region could miss a safer or more effective dose elsewhere. Future users should treat the reported all-time bests as strong local optima within the explored regions, not as evidence of global maxima.
+
+---
+
 ## Distribution and Maintenance
 
 **Availability:** This dataset and the associated notebook are maintained in a public GitHub repository at [https://github.com/mos-code-repo/capstone](https://github.com/mos-code-repo/capstone).
