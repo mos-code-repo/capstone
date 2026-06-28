@@ -2,6 +2,10 @@
 
 Black-box optimisation challenge: maximise the output of eight unknown functions across thirteen rounds using sequential model-based optimisation.
 
+## What this project is about
+
+This project explored eight mathematical puzzles where the rules were hidden. The only way to learn anything was to submit a test input and observe the resulting score -- one attempt per puzzle per week, for thirteen weeks. Using a statistical method that learns from previous results and estimates where the best scores are likely to be found, the search was progressively narrowed toward the most promising regions. By the final round, six of the eight puzzles showed consistent improvement, one was confirmed as structurally unsolvable, and one was solved in the first two weeks by recognising a simple boundary rule.
+
 ## Contents
 
 | File | Description |
