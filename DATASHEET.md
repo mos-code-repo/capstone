@@ -23,7 +23,7 @@ The dataset contains input-output pairs for eight functions, each with a differe
 
 Each function has 14 rows of data: one initial evaluation (provided by the course portal) plus one submitted query per round across thirteen rounds. Total dataset size: 112 input-output pairs (8 functions x 14 evaluations).
 
-**Format:** NumPy arrays (.npy) for initial data; rounds 1--12 embedded inline in the capstone notebook. All inputs are normalised to [0, 1]^d. Outputs are raw scalar values from the oracle.
+**Format:** NumPy arrays (.npy) for initial data; rounds 1--13 embedded inline in the capstone notebook. All inputs are normalised to [0, 1]^d. Outputs are raw scalar values from the oracle.
 
 **Gaps:** F1 output is effectively zero for all inputs evaluated -- no signal to exploit. F6 achieved its best result in R5 (-0.178) and never recovered that value across eight subsequent rounds; hierarchical clustering (Ward linkage, k=3) applied in R12 confirmed a sub-0.0001 spike in 5D; basin exploration in R12 returned -2.85; midpoint probe in R13 returned -0.669 -- confirming no second peak exists in the F6 landscape. The search space for high-dimensional functions (F7: 6D, F8: 8D) remains heavily undersampled -- 13 points in an 8-dimensional unit hypercube provides negligible global coverage.
 
