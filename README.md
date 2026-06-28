@@ -1,6 +1,6 @@
 # BBO Capstone Project — Imperial College London AI/ML Programme
 
-Black-box optimisation challenge: maximise the output of eight unknown functions across twelve rounds using sequential model-based optimisation.
+Black-box optimisation challenge: maximise the output of eight unknown functions across thirteen rounds using sequential model-based optimisation.
 
 ## Contents
 
@@ -17,26 +17,29 @@ Black-box optimisation challenge: maximise the output of eight unknown functions
 - **Rounds 4--8:** Hybrid -- GP-UCB and neural network gradient ascent, function-specific strategy
 - **Rounds 9--11:** Tight local exploitation -- pure scikit-learn GP-UCB with Matern kernel ensemble, anchored on confirmed all-time best inputs per function
 - **Round 12:** Hierarchical clustering (Ward linkage) applied to F6 input history to identify unexplored regions; GP-UCB exploitation continues for F2, F3, F4, F7, F8
+- **Round 13 (Final):** Pure exploitation anchored on all-time bests; F6 midpoint probe between R5 best and R2 cluster as final landscape survey
 
-## Results Summary (after Round 11)
+## Results Summary -- Final (13 Rounds)
 
 | Function | Best Output | Round | Notes |
 |----------|------------|-------|-------|
 | F1 | ~0 (confirmed zero) | Retired R7 | Output effectively zero across all inputs |
-| F2 | 0.6947 | R11 | Surpassed R7 peak after 4 rounds of recovery |
-| F3 | -0.0108 | R11 | Best round ever; active improvement seam |
-| F4 | 0.4394 | R10 | R11 regressed; re-anchored for R12 |
-| F5 | 8662.48 | R9 | Super-linear boundary scaling; ceiling confirmed R9-R11 |
-| F6 | -0.1778 | R5 | Sub-0.0001 spike; local search exhausted; R12 probes new basin |
-| F7 | 2.2957 | R11 | Consistent upward trend across 6 rounds |
-| F8 | 9.9671 | R11 | Near ceiling; marginal but consistent gains |
+| F2 | 0.6947 | R11 | Sharp local maximum; R12-R13 oscillated below |
+| F3 | -0.0108 | R11 | Sharp local maximum; R12-R13 oscillated below |
+| F4 | 0.5962 | R13 | Active seam; +0.157 cumulative gain R10-R13 |
+| F5 | 8662.4825 | R9 | Super-linear boundary scaling; ceiling confirmed R9-R13 |
+| F6 | -0.1778 | R5 | Sub-0.0001 spike; unexplored basin confirmed empty R12 |
+| F7 | 2.4330 | R13 | New best every round R6-R13 -- 8 consecutive improvements |
+| F8 | 9.9724 | R13 | Approaching ceiling at 10.0 |
 
 ## Key Findings
 
-- **F5 boundary scaling:** super-linear output growth as all dimensions approach 1.0, confirmed ceiling at [1,1,1,1] = 8662.48
-- **F6 pathological peak:** all-time best -0.1778 achieved at R5; subsequent rounds confirmed a sub-0.0001 spike -- even 0.000099 away the output collapses to -0.337. Hierarchical clustering used in R12 to identify a completely unexplored region of the 5D input space as the final probe
-- **F2 recovery:** R7 best (0.6686) held for 4 rounds before being surpassed in R11 (0.6947), demonstrating that GP-UCB with tight radii can eventually recover and improve on sharp peaks with sufficient rounds
+- **F7 sustained improvement:** new all-time best in every round from R6 to R13 -- 8 consecutive improvements across a 6-dimensional space
+- **F4 active seam:** largest cumulative gain in the final phase -- 0.439 (R10) to 0.542 (R12) to 0.596 (R13), driven by GP-UCB exploitation of a well-defined local gradient
+- **F5 boundary scaling:** super-linear output growth as all dimensions approach 1.0; ceiling at [1,1,1,1] = 8662.4825 confirmed stable across 5 rounds (R9-R13)
+- **F6 pathological peak:** all-time best -0.1778 at R5; sub-0.0001 spike confirmed R11; hierarchical clustering in R12 identified unexplored basin (returned -2.85); midpoint probe in R13 returned -0.669 -- no second peak exists
 - **R11 best single round:** 4 new all-time bests (F2, F3, F7, F8) in one submission
+- **R13 final round:** 3 new all-time bests (F4, F7, F8)
 
 ## Documentation
 

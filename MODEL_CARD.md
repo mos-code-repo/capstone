@@ -9,7 +9,7 @@ At its core, black-box optimisation submits coordinate vectors to an unknown fun
 **Name:** GP-UCB Local Exploitation with Adaptive Radius  
 **Type:** Sequential model-based optimisation (SMBO) using Gaussian Process surrogate with Upper Confidence Bound acquisition  
 **Implementation:** scikit-learn `GaussianProcessRegressor` with Matern kernel ensemble  
-**Version:** v4 (rounds 9--12; see Details for full evolution)
+**Version:** v5 (rounds 9--13; see Details for full evolution)
 
 ---
 
@@ -29,7 +29,7 @@ At its core, black-box optimisation submits coordinate vectors to an unknown fun
 
 ---
 
-## Details: Strategy Evolution Across Twelve Rounds
+## Details: Strategy Evolution Across Thirteen Rounds
 
 ### Phase 1 — Exploration (R1–R3)
 Initial queries used simple perturbation of the provided best input (R1), followed by a single GP with UCB acquisition over random candidates drawn via Latin Hypercube Sampling across the full input domain (R2–R3). Results were mixed: F5 showed strong response to boundary-seeking; most other functions showed high variance.
@@ -52,7 +52,10 @@ All active functions (excluding F1 and F5) used GP-UCB with tight radii anchored
 | F8 | +/-0.005 | Near ceiling (~10.0); marginal but consistent gains |
 
 ### Phase 4 -- Clustering-Guided Exploration (R12)
-F6 local search definitively exhausted after confirming sub-0.0001 spike via +/-0.0001 random probe. Hierarchical clustering (Ward linkage, k=3) applied to all 11 F6 input-output pairs to identify unexplored regions. The three clusters revealed that all post-R5 queries (R6--R11) lie within 0.000099 of the R5 best -- confirming the strategy had been searching an infinitesimally small neighbourhood. The most unexplored point (max-min-distance from all known inputs) was identified at [0.8538, 0.119, 0.035, 0.0172, 0.9531], 1.31 Euclidean units from all known F6 queries. R12 submits this as a final basin exploration. All other functions continue GP-UCB exploitation anchored on R11 bests.
+F6 local search definitively exhausted after confirming sub-0.0001 spike via +/-0.0001 random probe. Hierarchical clustering (Ward linkage, k=3) applied to all 11 F6 input-output pairs to identify unexplored regions. The three clusters revealed that all post-R5 queries (R6--R11) lie within 0.000099 of the R5 best -- confirming the strategy had been searching an infinitesimally small neighbourhood. The most unexplored point (max-min-distance from all known inputs) was identified at [0.8538, 0.119, 0.035, 0.0172, 0.9531], 1.31 Euclidean units from all known F6 queries. R12 returned -2.8525 -- no useful basin exists in that region. All other functions continue GP-UCB exploitation; R12 produced 3 new all-time bests (F4: 0.5417, F7: 2.3827, F8: 9.9693).
+
+### Phase 5 -- Final Exploitation (R13)
+All active functions anchored on confirmed all-time bests with tight radii. F6 received a midpoint probe at [0.337, 0.615, 0.681, 0.786, 0.365] between the R5 best and R2 cluster as a final landscape survey; returned -0.669, confirming no second peak. R13 produced 3 new all-time bests: F4 (0.5962), F7 (2.4330), F8 (9.9724). F7 improved in every round from R6 to R13 -- 8 consecutive improvements.
 
 **Kernel:** Matern ensemble — `C(1.0)*Matern(ls=0.05, ν=2.5) + C(1.0)*Matern(ls=0.10, ν=2.5)`  
 **Candidates:** 5000 per function per round  
@@ -63,18 +66,18 @@ F6 local search definitively exhausted after confirming sub-0.0001 spike via +/-
 
 ## Performance
 
-Results across all rounds (Init + R1--R11):
+Final results across all rounds (Init + R1--R13):
 
 | Fn | Initial | Best achieved | Round | Trend |
 |----|---------|--------------|-------|-------|
 | F1 | ~0 | ~0 | All | Confirmed zero -- retired R7 |
-| F2 | 0.611 | **0.695** | R11 | Surpassed R7 peak after 4 rounds of recovery |
-| F3 | -0.035 | **-0.011** | R11 | Best round ever in R11; active seam |
-| F4 | -4.026 | **0.439** | R10 | Breakthrough R10; R11 regressed |
-| F5 | 1089 | **8662** | R9 | Super-linear boundary scaling; ceiling R9--R11 |
-| F6 | -0.714 | **-0.178** | R5 | Sub-0.0001 spike; local search exhausted |
-| F7 | 1.365 | **2.296** | R11 | Consistent upward trend across 6 rounds |
-| F8 | 9.598 | **9.967** | R11 | Near ceiling; marginal but consistent gains |
+| F2 | 0.611 | **0.6947** | R11 | Sharp local maximum; R12-R13 oscillated below |
+| F3 | -0.035 | **-0.0108** | R11 | Sharp local maximum; R12-R13 oscillated below |
+| F4 | -4.026 | **0.5962** | R13 | Active seam; +0.157 cumulative gain R10-R13 |
+| F5 | 1089 | **8662.4825** | R9 | Super-linear boundary scaling; ceiling R9--R13 |
+| F6 | -0.714 | **-0.1778** | R5 | Sub-0.0001 spike; no second peak confirmed |
+| F7 | 1.365 | **2.4330** | R13 | New best every round R6--R13; 8 consecutive improvements |
+| F8 | 9.598 | **9.9724** | R13 | Approaching ceiling at 10.0 |
 
 **Metric used:** Raw function output from the course oracle. No normalisation applied across functions — outputs are on incomparable scales (F5: ~8662 vs F3: ~-0.013).
 
